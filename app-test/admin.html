@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>ניהול מתאמנות · אמילי</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Karantina:wght@400;700&family=Heebo:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+[hidden]{display:none!important}
+body{margin:0}
+.ad{max-width:720px;margin-inline:auto;padding-block:18px 60px}
+.ad h1{font-size:48px;color:var(--mocha);margin-top:10px}
+.ad .sub{color:var(--muted);margin-top:6px}
+.tabs{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.tabs button{border:1.5px solid var(--line);background:transparent;color:var(--fg);border-radius:999px;padding:8px 16px;font:500 15px var(--body);cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.list{display:grid;gap:12px;margin-top:16px}
+.tr{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;gap:10px}
+.tr .row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tr b{font-size:18px}
+.tr small{color:var(--muted);direction:ltr;unicode-bidi:plaintext}
+.pill{font-size:12px;font-weight:700;border-radius:999px;padding:4px 10px}
+.pill.wait{background:var(--accent-soft);color:var(--accent)}
+.pill.open{background:var(--ok-soft);color:var(--ok)}
+.pill.flag{background:#FFE7C2;color:#8A5300}
+.tr details{border-top:1px solid var(--line);padding-top:8px}
+.tr summary{cursor:pointer;font-weight:700;font-size:15px}
+.tr ul{margin:8px 0 0;padding-inline-start:18px;display:grid;gap:6px;font-size:15px}
+.tr .yes{color:var(--accent);font-weight:700}
+.tr .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tr .acts .btn{width:auto;padding:10px 18px;font-size:15px}
+.tr label{font-size:14px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.tr input[type=text]{font:15px var(--body);padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);width:130px;direction:ltr}
+.empty{color:var(--muted);margin-top:20px}
+.out{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font:14px var(--body)}
+</style>
+</head>
+<body>
+<div class="app ad">
+  <div class="top"><div class="brand">אמילי <span>·</span> ניהול</div><button class="out" id="out" type="button" hidden>יציאה</button></div>
+  <div id="main" hidden>
+    <h1>המתאמנות שלי</h1>
+    <p class="sub">כאן רואים מי נרשמה, קוראים את הצהרת הבריאות, ופותחים לה את התוכנית.</p>
+    <div class="tabs" role="group" aria-label="סינון">
+      <button type="button" data-f="wait" aria-pressed="true">מחכות לאישור</button>
+      <button type="button" data-f="open" aria-pressed="false">פתוחות</button>
+      <button type="button" data-f="all" aria-pressed="false">כולן</button>
+    </div>
+    <div class="list" id="list"></div>
+    <p class="empty" id="empty" hidden>אין כאן אף אחת כרגע.</p>
+  </div>
+  <p id="noAdmin" class="sub" style="margin-top:30px" hidden>המשתמש הזה לא מוגדר כמנהלת. בקשי מניקול להגדיר אותך.</p>
+  <p id="cfgMissing" class="sub" style="margin-top:30px" hidden>השרת עוד לא מחובר.</p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
+<script src="cloud-config.js"></script>
+<script>
+const HQ = [
+  "האם רופא אמר לך פעם שיש לך בעיה בלב או לחץ דם גבוה?",
+  "האם את מרגישה כאב בחזה במנוחה, ביום־יום או במאמץ?",
+  "האם קרה שאיבדת שיווי משקל בגלל סחרחורת, או שאיבדת הכרה, בשנה האחרונה?",
+  "האם אובחנת עם מחלה כרונית (למשל סוכרת, אסתמה, בעיה בבלוטת התריס)?",
+  "האם את נוטלת תרופות באופן קבוע?",
+  "האם יש לך פציעה או כאב בגב, במפרקים או בעצמות שעלול להחמיר בפעילות?",
+  "האם עברת ניתוח בשנה האחרונה?",
+  "האם את בהריון, או שילדת בשנה האחרונה?",
+  "האם רופא אמר לך להתאמן רק בהשגחה רפואית?"
+];
+const DAYFULL = ["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"];
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const CFG = window.CLOUD_CONFIG || {};
+let sb, ROWS = [], DATA = {}, F = "wait";
+
+function render(){
+  const list = ROWS.filter(p => p.role !== "admin").filter(p => F === "all" || (F === "open" ? p.approved : !p.approved));
+  $("#empty").hidden = list.length > 0;
+  $("#list").innerHTML = list.map(p => {
+    const d = DATA[p.id] || {}, cid = p.client_id || "";
+    const prof = d[`emily:${cid}:profile`] || {}, h = d[`emily:${cid}:health`];
+    const yes = h ? HQ.map((q, i) => ({q, a: (h.answers || {})[i] || {}})) .filter(x => x.a.v === "yes") : [];
+    const days = (prof.days || []).slice().sort((a,b) => a-b).map(i => DAYFULL[i]).join(", ");
+    const status = p.approved ? '<span class="pill open">התוכנית פתוחה</span>' : '<span class="pill wait">מחכה לאישור</span>';
+    const health = !h ? '<p class="sub">עוד לא מילאה הצהרת בריאות.</p>'
+      : `<ul>${yes.length ? yes.map(x => `<li><span class="yes">כן:</span> ${esc(x.q)}${x.a.note ? `<br>פירוט: ${esc(x.a.note)}` : ""}</li>`).join("") : "<li>ענתה \"לא\" על כל השאלות</li>"}
+        ${h.more ? `<li>עוד משהו: ${esc(h.more)}</li>` : ""}<li>הצהירה שהתשובות נכונות: ${h.declared ? "כן" : "לא"} · ${esc(h.at || "")}</li></ul>`;
+    return `<div class="tr" data-id="${p.id}">
+      <div class="row"><div><b>${esc(prof.name || p.email)}</b><br><small>${esc(p.email)}</small></div>
+        <div>${status} ${yes.length ? '<span class="pill flag">יש תשובות "כן" בהצהרה</span>' : ""}</div></div>
+      <div class="sub" style="font-size:14px">מטרות: ${esc((prof.goals || []).join(", ") || "-")} · ימים: ${esc(days || "-")} ${prof.time ? "· " + esc(prof.time) : ""}</div>
+      <details ${!p.approved ? "open" : ""}><summary>הצהרת בריאות</summary>${health}</details>
+      <div class="acts">
+        ${p.approved ? '<button class="btn ghost" data-act="close" type="button">לסגור גישה</button>' : '<button class="btn" data-act="open" type="button">לפתוח גישה לתוכנית</button>'}
+        <label>תוכנית: <input type="text" value="${esc(cid)}" data-act="cid" aria-label="שם התוכנית באפליקציה"></label>
+      </div></div>`;
+  }).join("");
+}
+
+async function load(){
+  const { data: profs, error } = await sb.from("profiles").select("*").order("created_at", {ascending:false});
+  if (error) return;
+  ROWS = profs;
+  const { data: rows } = await sb.from("app_data").select("user_id, k, v").or("k.like.%:profile,k.like.%:health");
+  DATA = {}; (rows || []).forEach(r => (DATA[r.user_id] ||= {})[r.k] = r.v);
+  render();
+}
+
+$("#list").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-act]"); if (!b) return;
+  const id = b.closest(".tr").dataset.id, approved = b.dataset.act === "open";
+  b.disabled = true;
+  const { error } = await sb.from("profiles").update({ approved }).eq("id", id);
+  if (error) { alert("לא הצלחנו לשמור. נסי שוב."); b.disabled = false; return; }
+  ROWS.find(p => p.id === id).approved = approved; render();
+});
+$("#list").addEventListener("change", async e => {
+  if (e.target.dataset.act !== "cid") return;
+  const id = e.target.closest(".tr").dataset.id, v = e.target.value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (!v) return;
+  await sb.from("profiles").update({ client_id: v }).eq("id", id);
+  ROWS.find(p => p.id === id).client_id = v; load();
+});
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  F = b.dataset.f; document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-pressed", x === b)); render();
+});
+
+if (!CFG.url || !CFG.anonKey) $("#cfgMissing").hidden = false;
+else {
+  sb = window.supabase.createClient(CFG.url, CFG.anonKey, {auth:{persistSession:true}});
+  sb.auth.getSession().then(async ({ data }) => {
+    if (!data.session) { location.href = "index.html?next=admin"; return; }
+    $("#out").hidden = false; $("#out").onclick = async () => { await sb.auth.signOut(); location.href = "index.html"; };
+    const { data: me } = await sb.from("profiles").select("role").eq("id", data.session.user.id).single();
+    if (!me || me.role !== "admin") { $("#noAdmin").hidden = false; return; }
+    $("#main").hidden = false; load();
+  });
+}
+</script>
+</body>
+</html>
