@@ -50,6 +50,11 @@ body{margin:0}
     </div>
     <div class="list" id="list"></div>
     <p class="empty" id="empty" hidden>אין כאן אף אחת כרגע.</p>
+    <div class="tr" style="margin-top:36px">
+      <b>סרטוני התרגילים</b>
+      <p class="sub" style="font-size:14px">מעביר את הסרטונים לאחסון מאובטח, שרק מתאמנות שאישרת יכולות לצפות בו. צריך לעשות פעם אחת, ושוב כשמוסיפים סרטונים חדשים.</p>
+      <div class="acts"><button class="btn ghost" id="clipsBtn" type="button">העברת הסרטונים לאחסון המאובטח</button><span class="sub" id="clipsMsg" style="font-size:14px"></span></div>
+    </div>
   </div>
   <p id="noAdmin" class="sub" style="margin-top:30px" hidden>המשתמש הזה לא מוגדר כמנהלת. בקשי מניקול להגדיר אותך.</p>
   <p id="cfgMissing" class="sub" style="margin-top:30px" hidden>השרת עוד לא מחובר.</p>
@@ -121,6 +126,21 @@ $("#list").addEventListener("change", async e => {
   if (!v) return;
   await sb.from("profiles").update({ client_id: v }).eq("id", id);
   ROWS.find(p => p.id === id).client_id = v; load();
+});
+const CLIPS_FROM = "https://sergeevnicol.github.io/emily/app/clips/";
+const CLIPS = ["bench.jpg","bench.mp4","bulgarian.jpg","bulgarian.mp4","cable-row.jpg","cable-row.mp4","crunch.jpg","crunch.mp4","db-hip-thrust.jpg","db-hip-thrust.mp4","db-rdl.jpg","db-rdl.mp4","goblet.jpg","goblet.mp4","hip-thrust.jpg","hip-thrust.mp4","hyperext.jpg","hyperext.mp4","kickback.jpg","kickback.mp4","knee-tuck.jpg","knee-tuck.mp4","latpull.jpg","latpull.mp4","squat-bar.jpg","squat-bar.mp4","sumo.jpg","sumo.mp4"];
+$("#clipsBtn").addEventListener("click", async () => {
+  const b = $("#clipsBtn"), msg = $("#clipsMsg"); b.disabled = true; let ok = 0, bad = [];
+  for (const f of CLIPS) {
+    msg.textContent = `מעביר ${ok + bad.length + 1} מתוך ${CLIPS.length}...`;
+    try {
+      const r = await fetch(CLIPS_FROM + f, {cache:"no-store"}); if (!r.ok) throw 0;
+      const blob = await r.blob();
+      const { error } = await sb.storage.from("clips").upload(f, blob, { upsert:true, contentType: f.endsWith(".mp4") ? "video/mp4" : "image/jpeg" });
+      if (error) throw error; ok++;
+    } catch(e) { bad.push(f); }
+  }
+  msg.textContent = bad.length ? `הועברו ${ok}. נכשלו: ${bad.join(", ")}` : `כל ${ok} הקבצים הועברו ✓`; b.disabled = false;
 });
 document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
   F = b.dataset.f; document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-pressed", x === b)); render();

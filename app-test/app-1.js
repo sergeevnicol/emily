@@ -95,6 +95,8 @@ const store = {
   get(k,d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
   set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
+/* Video address: in secure mode a private, time-limited link from the server; otherwise the local file. */
+const clip = f => (window.CLIP_URL && window.CLIP_URL[f]) || "clips/" + f;
 const pad = n => String(n).padStart(2,"0");
 const fmt = s => `${Math.floor(s/60)}:${pad(s%60)}`;
 const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
@@ -175,7 +177,7 @@ function renderWorkout(){
     card.innerHTML = `
       <div class="head">
         <button type="button" class="thumb" aria-label="סרטון: ${L.name}">
-          <video src="clips/${e.id}.mp4" poster="clips/${e.id}.jpg" muted loop playsinline preload="none"></video>
+          <video src="${clip(e.id + ".mp4")}" poster="${clip(e.id + ".jpg")}" muted loop playsinline preload="none"></video>
           <span class="p">${playIcon}</span>
         </button>
         <div>

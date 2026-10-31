@@ -107,6 +107,17 @@
     }
     if (PROF.approved) orig.set.call(localStorage, prefix + "planOpen", "true"); else orig.remove.call(localStorage, prefix + "planOpen");
     hook(prefix); flush();
+    /* Private exercise videos: signed links valid for a week, only for approved trainees. */
+    if (PROF.approved || PROF.role === "admin") {
+      try {
+        const { data: files } = await sb.storage.from("clips").list("", { limit: 1000 });
+        const names = (files || []).map(f => f.name).filter(Boolean);
+        if (names.length) {
+          const { data: signed } = await sb.storage.from("clips").createSignedUrls(names, 60 * 60 * 24 * 7);
+          window.CLIP_URL = {}; (signed || []).forEach(x => { if (x.signedUrl) window.CLIP_URL[x.path] = x.signedUrl; });
+        }
+      } catch(e) {}
+    }
     window.CLOUD = {
       email: USER.email, approved: !!PROF.approved, admin: PROF.role === "admin",
       async refresh(){ const p = await fetchProfile(); this.approved = !!(p && p.approved); return this.approved; },
