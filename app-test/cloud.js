@@ -30,7 +30,7 @@
     <div id="clStep1"><h1>כניסה</h1><p style="margin:8px 0 14px">כתבי את המייל שלך ונשלח אלייך קישור כניסה. בלי סיסמה.</p>
       <input id="clEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com">
       <button class="btn" id="clSend" type="button" style="margin-top:14px">שלחי לי קישור</button></div>
-    <div id="clStep2" hidden><h1>בדקי את המייל</h1><p style="margin:8px 0 14px">שלחנו מייל ל־<b id="clTo"></b>. פתחי אותו בטלפון הזה ולחצי על הקישור. אם קיבלת קוד, אפשר להקליד אותו כאן.</p>
+    <div id="clStep2" hidden><h1>בדקי את המייל</h1><p style="margin:8px 0 14px">שלחנו מייל ל־<b id="clTo"></b>. פתחי אותו במכשיר הזה ולחצי על הקישור. אם קיבלת קוד, אפשר להקליד אותו כאן.</p>
       <input id="clCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456">
       <button class="btn" id="clVerify" type="button" style="margin-top:14px">כניסה</button>
       <button class="linkbtn" id="clBack" type="button" style="margin-top:10px">מייל אחר או שליחה מחדש</button></div>

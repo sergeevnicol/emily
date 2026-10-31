@@ -75,7 +75,7 @@ const CFG = window.CLOUD_CONFIG || {};
 let sb, ROWS = [], DATA = {}, F = "wait";
 
 function render(){
-  const list = ROWS.filter(p => p.role !== "admin").filter(p => F === "all" || (F === "open" ? p.approved : !p.approved));
+  const list = ROWS.filter(p => F === "all" || (F === "open" ? p.approved : !p.approved));
   $("#empty").hidden = list.length > 0;
   $("#list").innerHTML = list.map(p => {
     const d = DATA[p.id] || {}, cid = p.client_id || "";
