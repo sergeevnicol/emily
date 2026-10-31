@@ -187,7 +187,7 @@ const PHOTOS = false;
 const OB_STEPS = PHOTOS ? ["ob1","obH","ob2","ob3"] : ["ob1","obH","ob2"];
 let obState = {name:"", goal:"", days:[], time:"18:00"};
 function obStep(n){
-  ["ob1","obH","ob2","ob3"].forEach(id => $("#"+id).hidden = true);
+  ["ob1","obH","obWait","ob2","ob3"].forEach(id => $("#"+id).hidden = true);
   OB_STEPS.forEach((id, i) => { $("#"+id).hidden = i+1 !== n; $("#dot"+(i+1))?.classList.toggle("on", i+1 <= n); });
   window.scrollTo(0,0);
 }
@@ -383,7 +383,9 @@ $("#hqNext").addEventListener("click", () => {
   $("#hqErr").textContent = err; $("#hqErr").hidden = !err;
   if (err) { if (missing.length) $(`#hqi${missing[0]}`).scrollIntoView({behavior:"smooth", block:"center"}); return; }
   store.set(healthKey, {answers: hqAns, more: $("#hqMore").value.trim(), declared: true, at: todayKey()});
-  renderCal(); obStep(3);
+  PROFILE = Object.assign({}, PROFILE || {}, {submitted: todayKey()}); store.set(PROFILE_KEY, PROFILE);
+  sendToEmily();
+  afterDeclaration();
 });
 $("#hqBack").addEventListener("click", () => obStep(1));
 
@@ -496,15 +498,30 @@ function answersText(){
     h.more ? `\nעוד משהו שחשוב לדעת: ${h.more}` : "", `\nהצהירה שהתשובות נכונות: ${h.declared ? "כן" : "לא"}`];
   return lines.filter(l => l !== "").join("\n");
 }
-$("#obSendEmily").addEventListener("click", () => {
+function sendToEmily(){
   const a = document.createElement("a"); a.href = `https://wa.me/${EMILY_WHATSAPP}?text=${encodeURIComponent(answersText())}`; a.target = "_blank"; a.rel = "noopener";
   document.body.appendChild(a); a.click(); a.remove();
-  PROFILE = Object.assign({}, PROFILE || {}, {sentToEmily: todayKey()}); store.set(PROFILE_KEY, PROFILE);
-  $("#obSendMsg").textContent = "נפתח וואטסאפ עם התשובות. רק ללחוץ שליחה."; $("#obSendMsg").hidden = false;
+}
+/* Gate: the plan opens only after Emily reviewed the declaration, built the plan and the trainee approved it on a call.
+   Emily (via Claude) sets approved:true on the trainee's entry in CLIENTS. */
+const OPEN_KEY = `emily:${cid}:planOpen`;
+if (store.get(OPEN_KEY, false)) C.approved = true;   // seen as approved on the server, even if the browser still has an old app-1.js cached
+function showWait(){ go("onboard"); obStep(2); $("#obH").hidden = true; $("#obWait").hidden = false; $("#waitMsg").hidden = true; }
+function afterDeclaration(){ if (C.approved) { go("onboard"); renderCal(); obStep(3); } else showWait(); }
+$("#waitCheck").addEventListener("click", () => {
+  fetch("app-1.js?" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
+    const open = new RegExp(`\\b${cid}\\s*:\\s*\\{[^}]*approved\\s*:\\s*true`).test(t) || new RegExp(`APPROVED\\s*=\\s*\\[[^\\]]*"${cid}"`).test(t);
+    if (open) { store.set(OPEN_KEY, true); location.reload(); } else { $("#waitMsg").textContent = "התוכנית עוד לא נפתחה. אמילי תעדכן אותך כשהיא מוכנה."; $("#waitMsg").hidden = false; }
+  }).catch(() => location.reload());
 });
+$("#waitResend").addEventListener("click", sendToEmily);
+$("#waitEdit").addEventListener("click", () => startOnboarding(1));
 
 /* ---------- boot ---------- */
 function renderAll(){ load(); finishState = null; pendingPush = null; stopPush(); restEnd = 0; restDoneAt = 0; $("#rest").hidden = true; renderDays(); renderPlaylists(); renderWorkout(); tick(); }
 renderAll();
-if (PROFILE && PROFILE.done) go("home"); else startOnboarding(1);
+if (!C.approved && PROFILE && PROFILE.submitted) showWait();
+else if (PROFILE && PROFILE.done) go("home");
+else if (PROFILE && PROFILE.submitted) afterDeclaration();
+else startOnboarding(1);
 window.addEventListener("hashchange", () => location.reload());

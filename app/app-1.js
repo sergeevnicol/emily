@@ -19,7 +19,7 @@ const LIB = {
 /* ---------- Clients. Each client opens the app with her own link: ...#maya ---------- */
 const CLIENTS = {
   maya:{
-    name:"מאיה", goal:"חיטוב וישבן", week:3, weeks:8, protein:100,
+    name:"מאיה", goal:"חיטוב וישבן", week:3, weeks:8, protein:100, approved:true,
     coach:"שבוע 3! מהיום מעלות קצת משקל כשכל החזרות יוצאות נקי. אני גאה בך.",
     // 0=Sunday ... 6=Saturday
     schedule:{0:"A",2:"B",4:"C"},
@@ -57,10 +57,12 @@ const CLIENTS = {
    Emily can give anyone her own plan by adding a full entry to CLIENTS with the same id.
    Links: .../#nicol  .../#alexandra  .../#roni  .../#michal  .../#emily ---------- */
 const TESTERS = {nicol:"ניקול", alexandra:"אלכסנדרה", roni:"רוני", michal:"מיכל", emily:"אמילי"};
+/* Whose plan is open. Add an id here after Emily reviewed the health declaration and the trainee approved her plan on a call. */
+const APPROVED = [];
 Object.entries(TESTERS).forEach(([id, name]) => {
   if (CLIENTS[id]) return;
   CLIENTS[id] = Object.assign(JSON.parse(JSON.stringify(CLIENTS.maya)), {
-    name, week:1, weeks:2,
+    name, week:1, weeks:2, approved: APPROVED.includes(id),
     coach:"ברוכה הבאה לבדיקה! שבועיים, שלושה אימונים בשבוע. כל הערה שלך עוזרת לי לבנות את האפליקציה."
   });
 });

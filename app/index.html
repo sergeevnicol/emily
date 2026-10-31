@@ -46,8 +46,21 @@
         <div class="tipbox" id="hqWarn" hidden><b>סימנת "כן" לפחות בשאלה אחת</b>אמילי תעבור על זה איתך לפני האימון הראשון ותתאים את התוכנית. ייתכן שתתבקשי להביא אישור רופא לפני שמתחילות.</div>
         <label class="consent" for="hqDecl"><input type="checkbox" id="hqDecl"> אני מצהירה שהתשובות נכונות, ואעדכן את אמילי אם משהו משתנה.</label>
         <p class="err" id="hqErr" hidden></p>
-        <button class="btn" type="button" id="hqNext">המשך</button>
+        <button class="btn" type="button" id="hqNext">שליחת ההצהרה לאמילי</button>
+        <p class="lead" style="font-size:13px">נפתח וואטסאפ עם התשובות שלך. רק ללחוץ שליחה.</p>
         <button class="linkbtn" type="button" id="hqBack">חזרה לפרטים</button>
+      </div>
+    </section>
+
+    <section id="obWait" hidden>
+      <h1>ההצהרה אצל אמילי</h1>
+      <p class="lead">תודה! אמילי עוברת על כל מה שכתבת ומוודאת שאין מגבלה רפואית. אחר כך היא בונה לך תוכנית אישית ומתקשרת אלייך לעבור עליה יחד.</p>
+      <div class="stack">
+        <div class="tipbox"><b>מה עכשיו?</b>ברגע שתאשרי את התוכנית בשיחה עם אמילי, היא תיפתח לך כאן עם כל האימונים.</div>
+        <button class="btn" type="button" id="waitCheck">בדיקה אם התוכנית נפתחה</button>
+        <p class="lead" id="waitMsg" style="font-size:13px" hidden></p>
+        <button class="btn ghost" type="button" id="waitResend">לא נשלח? שליחה שוב בוואטסאפ</button>
+        <button class="linkbtn" type="button" id="waitEdit">תיקון הפרטים או ההצהרה</button>
       </div>
     </section>
 
@@ -57,9 +70,6 @@
       <div class="stack" id="obCal"></div>
       <div class="stack">
         <p class="lead" style="font-size:13px">ההוספה נפתחת ביומן Google. כל אימון חוזר כל שבוע לאורך התוכנית.</p>
-        <div class="tipbox"><b>שלחי לאמילי את התשובות</b>ככה אמילי תכין לך תוכנית אישית לפי המטרות והצהרת הבריאות שלך. נפתח וואטסאפ עם הכל מוכן, רק ללחוץ שליחה.</div>
-        <button class="btn ghost" type="button" id="obSendEmily">שליחת התשובות לאמילי בוואטסאפ</button>
-        <p class="lead" id="obSendMsg" style="font-size:13px" hidden></p>
         <button class="btn" type="button" id="ob2Next">יאללה, מתחילות</button>
         <button class="linkbtn" type="button" id="ob2Back">חזרה להצהרת בריאות</button>
       </div>
