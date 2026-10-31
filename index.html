@@ -301,15 +301,7 @@ footer{padding-block:40px;border-top:1px solid var(--line);margin-top:40px;displ
 <section id="library">
   <div class="eyebrow">ספריית תרגילים</div>
   <h2>רואה את זה לפני שאת עושה את זה</h2>
-  <p style="color:var(--muted);margin-top:14px;max-width:36em">צילמתי כל תרגיל שמופיע בתוכניות. לחצי על סרטון כדי לראות את הביצוע, וקראי את הדגשים מתחת.</p>
-  <div class="filters" role="group" aria-label="סינון לפי אזור">
-    <button class="chip" type="button" data-f="all" aria-pressed="true">הכל</button>
-    <button class="chip" type="button" data-f="ישבן" aria-pressed="false">ישבן</button>
-    <button class="chip" type="button" data-f="רגליים" aria-pressed="false">רגליים</button>
-    <button class="chip" type="button" data-f="גב" aria-pressed="false">גב</button>
-    <button class="chip" type="button" data-f="חזה" aria-pressed="false">חזה</button>
-    <button class="chip" type="button" data-f="בטן" aria-pressed="false">בטן</button>
-  </div>
+  <p style="color:var(--muted);margin-top:14px;max-width:36em">הנה טעימה קטנה מתוך התרגילים שצילמתי. בתוכנית שלך כל תרגיל מגיע עם סרטון שלי ודגשים לביצוע נכון.</p>
   <div class="lib" id="lib"></div>
 </section>
 
@@ -474,7 +466,8 @@ const EX = [
 
 const lib = document.getElementById("lib");
 const playIcon = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z"/></svg>';
-EX.forEach(e => {
+const SAMPLE = ["hip-thrust", "bulgarian", "latpull"];   // only a teaser on the landing page
+EX.filter(e => SAMPLE.includes(e.id)).forEach(e => {
   const el = document.createElement("article");
   el.className = "ex"; el.dataset.cat = e.cat;
   el.innerHTML = `<div class="vid"><video src="clips/${e.id}.mp4" poster="clips/${e.id}.jpg" muted loop playsinline preload="none"></video>
@@ -492,11 +485,6 @@ EX.forEach(e => {
   lib.appendChild(el);
 });
 
-document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => {
-  document.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === c ? "true" : "false"));
-  const f = c.dataset.f;
-  document.querySelectorAll(".ex").forEach(ex => { ex.hidden = !(f === "all" || ex.dataset.cat === f); });
-}));
 
 if (INSTAGRAM) {
   document.getElementById("ig").innerHTML = `<a href="https://instagram.com/${INSTAGRAM}" target="_blank" rel="noopener">@${INSTAGRAM} באינסטגרם</a>`;
