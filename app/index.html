@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>האימון שלי · אמילי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Karantina:wght@400;700&family=Heebo:wght@400;500;700;800&display=swap">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif;background:#faf9f7}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="brand">אמילי <span>·</span> אימון</div>
+    <div class="week" id="weekLbl"></div>
+  </div>
+
+  <div id="onboardView" class="ob" hidden>
+    <div class="dots" aria-hidden="true"><i id="dot1"></i><i id="dot2"></i><i id="dot3"></i></div>
+
+    <section id="ob1">
+      <h1>נעים להכיר!</h1>
+      <p class="lead">כמה פרטים, ואני בונה לך את השבוע.</p>
+      <form id="obForm" novalidate>
+        <div><label class="l" for="obName">איך קוראים לך?</label><input type="text" id="obName" autocomplete="given-name"></div>
+        <div><span class="l" style="font-weight:700;display:block;margin-bottom:8px">מה המטרות שלך?</span>
+          <div class="chips" id="obGoal" role="group" aria-label="מטרות"></div>
+          <p class="lead" style="font-size:13px">אפשר לבחור כמה מטרות.</p></div>
+        <div><span class="l" style="font-weight:700;display:block;margin-bottom:8px">באילו ימים תתאמני?</span>
+          <div class="chips days" id="obDays" role="group" aria-label="ימי אימון"></div>
+          <p class="lead" style="font-size:13px">בחרי 2 עד 5 ימים. אני משבצת את האימונים לפי הסדר.</p></div>
+        <div><label class="l" for="obTime">באיזו שעה?</label><input type="time" id="obTime" value="18:00"></div>
+        <p class="err" id="obErr" hidden></p>
+        <button class="btn" type="submit">המשך</button>
+      </form>
+    </section>
+
+    <section id="obH" hidden>
+      <h1>הצהרת בריאות</h1>
+      <p class="lead">כמה שאלות קצרות כדי שהתוכנית תהיה בטוחה בשבילך. עני בכנות, אין תשובה לא נכונה.</p>
+      <div class="stack">
+        <div class="hq" id="hq"></div>
+        <div><label class="l" for="hqMore">משהו נוסף שחשוב שאמילי תדע? (לא חובה)</label><textarea id="hqMore" placeholder="למשל: כאב בברך ימין בירידה במדרגות"></textarea></div>
+        <div class="tipbox" id="hqWarn" hidden><b>סימנת "כן" לפחות בשאלה אחת</b>אמילי תעבור על זה איתך לפני האימון הראשון ותתאים את התוכנית. ייתכן שתתבקשי להביא אישור רופא לפני שמתחילות.</div>
+        <label class="consent" for="hqDecl"><input type="checkbox" id="hqDecl"> אני מצהירה שהתשובות נכונות, ואעדכן את אמילי אם משהו משתנה.</label>
+        <p class="err" id="hqErr" hidden></p>
+        <button class="btn" type="button" id="hqNext">המשך</button>
+        <button class="linkbtn" type="button" id="hqBack">חזרה לפרטים</button>
+      </div>
+    </section>
+
+    <section id="ob2" hidden>
+      <h1>שמים את זה ביומן</h1>
+      <p class="lead">אימון שנמצא ביומן הוא אימון שקורה. הוסיפי כל אימון ליומן שלך, והוא יחזור כל שבוע לאורך כל התוכנית.</p>
+      <div class="stack" id="obCal"></div>
+      <div class="stack">
+        <p class="lead" style="font-size:13px">ההוספה נפתחת ביומן Google. כל אימון חוזר כל שבוע לאורך התוכנית.</p>
+        <button class="btn" type="button" id="ob2Next">יאללה, מתחילות</button>
+        <button class="linkbtn" type="button" id="ob2Back">חזרה להצהרת בריאות</button>
+      </div>
+    </section>
+
+    <section id="ob3" hidden>
+      <h1>התמונות של ההתחלה</h1>
+      <p class="lead">לא חובה, אבל זה הדבר שהכי תשמחי שעשית. בסוף התהליך נשים אותן ליד תמונות של אחרי.</p>
+      <div class="stack">
+        <div class="tipbox"><b>איך מצלמים נכון</b><ul>
+          <li>בבוקר, לפני אוכל</li><li>אותו מקום ואותה תאורה, מול קיר בהיר</li>
+          <li>בגדים צמודים או בגד ים</li><li>הטלפון בגובה החזה, גוף שלם בתמונה</li></ul></div>
+        <div class="shots" id="obShots"></div>
+        <div class="privacy">
+          <div class="lock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+            <span><b>התמונות שלך נשארות שלך.</b> הן נשמרות באפליקציה בטלפון שלך בלבד, ולאף אחד אין גישה אליהן, גם לא לאמילי.</span></div>
+          <label class="consent" for="phConsent"><input type="checkbox" id="phConsent"> אני מסכימה להשתתף במעקב של אמילי, כולל התמונות.</label>
+          <p class="lead" style="font-size:13px;margin:0">אפשר לשנות את זה בכל רגע מעמוד הבית.</p>
+        </div>
+        <div class="save-warn"><b>חשוב: שמרי את התמונות גם אצלך.</b> סמני אותן כמועדפות בגלריה או שמרי אותן באלבום "לפני", כדי שנוכל לחזור אליהן בסוף התהליך.
+          <button class="btn ghost" type="button" id="obSavePh" style="margin-top:10px" hidden>שמירת התמונות בטלפון</button>
+          <p id="obSaveMsg" class="lead" style="font-size:13px" hidden></p></div>
+        <button class="btn" type="button" id="obDone">יאללה, מתחילות</button>
+        <button class="linkbtn" type="button" id="obSkip">אצלם אחר כך</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="homeView">
+    <div class="hello">
+      <label class="avatar" for="photo" aria-label="העלאת תמונה">
+        <img id="avatarImg" alt="" hidden><span id="avatarPh">הוסיפי<br>תמונה</span>
+        <span class="cam"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+        <input type="file" id="photo" accept="image/*" hidden>
+      </label>
+      <div><small id="hiTime"></small><h1 id="hiName"></h1><p class="quote" id="quote"></p></div>
+    </div>
+    <button class="rbanner" id="rBanner" type="button" hidden><span><span id="rBannerT"></span><small>לחצי לראות איך היה החודש שלך</small></span><span class="chev" aria-hidden="true" style="display:flex;gap:2px;direction:ltr"><i style="width:9px;height:9px;border-left:3px solid #fff;border-bottom:3px solid #fff;transform:rotate(45deg)"></i><i style="width:9px;height:9px;border-left:3px solid #fff;border-bottom:3px solid #fff;transform:rotate(45deg);opacity:.6"></i></span></button>
+
+    <div class="card comm" id="commCard">
+      <h2><span class="head"><i class="live off" id="commDot"></i>הקהילה עכשיו</span> <small id="commTxt"></small></h2>
+      <div class="faces" id="commFaces"></div>
+      <div id="commList"></div>
+      <p class="comm-empty" id="commEmpty">כשעוד מתאמנות יפתחו את האפליקציה, תראי אותן כאן.</p>
+    </div>
+    <div class="card todayW">
+      <div class="eb" id="hLabel"></div>
+      <h2 id="hTitle"></h2>
+      <div class="facts" id="hFacts"></div>
+      <div class="mini-track" id="hTrack" hidden><i id="hTrackI"></i></div>
+      <button class="btn bigbtn" id="hStart" type="button"></button>
+    </div>
+
+    <div class="card">
+      <h2>טבלת אימונים <small id="hWeekTxt"></small></h2>
+      <table class="t"><tbody id="hWeek"></tbody></table>
+    </div>
+
+    <div class="card">
+      <h2>האוכל של היום <small>יעד: <span id="hProtGoal"></span> גר׳ חלבון</small></h2>
+      <div class="foodtop">
+        <div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="var(--line)" stroke-width="10"/><circle id="ringArc" cx="50" cy="50" r="42" fill="none" stroke="var(--accent)" stroke-width="10" stroke-linecap="round" stroke-dasharray="263.9" stroke-dashoffset="263.9" style="transition:stroke-dashoffset .5s"/></svg><div class="v"><div><b id="ringV">0</b><br><span>גרם</span></div></div></div>
+        <div class="quick"><p>אכלת משהו אחר? הוסיפי חלבון:</p><button type="button" data-g="10">+10</button><button type="button" data-g="20">+20</button><button type="button" data-g="30">+30</button><button type="button" data-g="undo" aria-label="ביטול הוספה אחרונה">ביטול</button></div>
+      </div>
+      <table class="t"><tbody id="hFood"></tbody></table>
+    </div>
+
+    <div class="card">
+      <h2>מעקב משקל <small>פעם בשבוע, בבוקר</small></h2>
+      <div class="wrow"><input type="number" inputmode="decimal" step="0.1" id="wIn" placeholder="המשקל שלך היום (ק״ג)"><button class="btn" type="button" id="wAdd">שמירה</button></div>
+      <div class="wstats" id="wStats"></div>
+      <div class="chart" id="wChart"></div>
+    </div>
+
+    <div class="card" id="hGoalCard" hidden>
+      <h2>היעד שלי <small id="hGoalMonth"></small></h2>
+      <ul class="saved-goals" id="hGoalList" style="margin-top:8px"></ul>
+    </div>
+    <div class="card">
+      <h2>החודש שלך <small id="hMonthTxt"></small></h2>
+      <div class="minicubes" id="hCubes"></div>
+      <button class="btn ghost go" type="button" id="hMonth">למעקב החודשי המלא</button>
+    </div>
+    <div class="card" id="baCard" hidden>
+      <h2>לפני ואחרי <small id="baTxt"></small></h2>
+      <div class="ba" id="baGrid"></div>
+    </div>
+    <label class="consent" for="commOpt" style="margin-top:12px;font-size:14px"><input type="checkbox" id="commOpt"> להופיע בקהילה כשאני מתאמנת (רק השם הפרטי שלי)</label>
+    <label class="consent" for="phConsentHome" style="margin-top:12px;font-size:14px" hidden><input type="checkbox" id="phConsentHome"> אני מסכימה להשתתף במעקב של אמילי, כולל התמונות</label>
+    <div class="card" id="fbCard">
+      <h2>משוב לאמילי <small>גרסת ניסיון</small></h2>
+      <p class="lead" style="font-size:14px;color:var(--muted);margin-top:4px">את בין הראשונות שמנסות את האפליקציה. כל הערה עוזרת, גם קטנה.</p>
+      <div class="chips" id="fbRate" role="group" aria-label="איך האפליקציה" style="margin-top:10px">
+        <button type="button" data-r="מעולה">מעולה</button><button type="button" data-r="טוב, עם הערות">טוב, עם הערות</button><button type="button" data-r="מבלבל">מבלבל</button></div>
+      <textarea id="fbText" placeholder="מה אהבת? מה היה לא ברור? משהו שלא עבד?" style="width:100%;min-height:80px;margin-top:10px;font:15px var(--body);padding:11px 12px;border-radius:14px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg)"></textarea>
+      <button class="btn" type="button" id="fbSend" style="margin-top:10px">שליחה לאמילי בוואטסאפ</button>
+      <p class="lead" id="fbMsg" style="font-size:13px;color:var(--muted);margin-top:6px" hidden></p>
+    </div>
+    <button class="linkbtn" type="button" id="editProfile" style="display:block;margin:18px auto 0">עריכת פרטים, ימים ויומן</button>
+
+  </div>
+
+  <div id="workoutView" hidden>
+    <div class="backbar"><button type="button" class="backbtn" data-back="home"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>חזרה לבית</button><span class="crumb">אימון</span></div>
+    <div class="coach"><small id="coachHi"></small><p id="coachMsg"></p></div>
+    <div class="music">
+      <div class="mh"><span>המוזיקה לאימון</span><small>נפתח בספוטיפיי, חוזרים לכאן</small></div>
+      <div class="pls" id="pls"></div>
+      <div class="sound" role="group" aria-label="הגדרות קול">
+        <span class="lab">ספירה לאחור:</span>
+        <button type="button" class="tg" data-k="count" data-v="emily">הקול של אמילי</button>
+        <button type="button" class="tg" data-k="count" data-v="beep">ביפים</button>
+        <button type="button" class="tg" data-k="count" data-v="off">כבוי</button>
+        <span class="lab" style="margin-inline-start:8px">דחיפה לכשל:</span>
+        <button type="button" class="tg" data-k="push" data-v="on">פועל</button>
+        <button type="button" class="tg" data-k="push" data-v="off">כבוי</button>
+      </div>
+    </div>
+    <div class="days" id="days" role="group" aria-label="ימי השבוע"></div>
+
+    <div class="hero">
+      <div class="label" id="wLabel"></div>
+      <h1 id="wTitle"></h1>
+      <div class="facts" id="wFacts"></div>
+    </div>
+
+    <div class="prog">
+      <div class="row"><span id="progTxt">0 מתוך 0 סטים</span><span class="clock" id="clock">00:00</span></div>
+      <div class="track"><i id="progBar"></i></div>
+      <div class="together" id="together" hidden><span class="faces" id="togFaces"></span><span id="togTxt"></span></div>
+    </div>
+    <button class="btn" id="startBtn" type="button">מתחילות את האימון</button>
+
+    <div class="list" id="list"></div>
+    <div class="finish">
+      <button class="hold" id="finishBtn" type="button" aria-disabled="true">
+        <span class="fill" id="holdFill"></span>
+        <span class="lbl" id="holdLbl"></span>
+        <span class="mini"><i id="holdMini"></i></span>
+      </button>
+      <p class="hint" id="holdHint"></p>
+      <button class="next" id="nextBtn" type="button" hidden><span>לסיכום ולארוחה</span><span class="chev" aria-hidden="true"><i></i><i></i><i></i></span></button>
+    </div>
+  </div>
+
+  <div id="sumView" class="sum" hidden>
+    <div class="backbar"><button type="button" class="backbtn" data-back="home"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>חזרה לבית</button><span class="crumb">סיכום אימון</span></div>
+    <div class="stamp" id="stamp"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span id="stampTxt"></span></div>
+    <h1 id="sumTitle">כל הכבוד!</h1>
+    <div class="stats">
+      <div class="stat"><b id="sTime">0</b><span>דקות</span></div>
+      <div class="stat"><b id="sSets">0</b><span>סטים</span></div>
+      <div class="stat"><b id="sVol">0</b><span>ק״ג הרמת</span></div>
+    </div>
+    <div class="streak"><p id="streakTxt"></p><div class="wk" id="streakWk"></div></div>
+
+    <div class="sec">
+      <h2 id="mealTitle">מה אוכלים עכשיו</h2>
+      <p class="sub" id="mealSub"></p>
+      <div class="protein">
+        <div class="row"><span>חלבון היום</span><span id="protTxt"></span></div>
+        <div class="track"><i id="protBar"></i></div>
+      </div>
+      <div class="meals" id="meals"></div>
+      <div class="out" id="outTip"></div>
+    </div>
+    <button class="next" id="monthBtn" type="button"><span class="tick"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><span id="monthBtnT">הוספה למעקב החודשי</span></button>
+    <button class="btn ghost" id="backBtn" type="button" style="margin-top:12px">לעמוד הבית</button>
+  </div>
+
+  <div id="monthView" hidden>
+    <div class="backbar"><button type="button" class="backbtn" data-back="home"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>חזרה לבית</button><span class="crumb">מעקב חודשי</span></div>
+    <div class="mhead">
+      <div><h1 id="mTitle"></h1><p class="msub" id="mSub"></p></div>
+      <div class="mnav"><button type="button" id="mPrev" aria-label="חודש קודם">›</button><button type="button" id="mNext" aria-label="חודש הבא">‹</button></div>
+    </div>
+    <div class="recap" id="recap" hidden>
+      <div class="eb" id="rEb">סיכום החודש</div>
+      <h2 id="rTitle"></h2>
+      <p class="msg" id="rMsg"></p>
+      <div class="rgrid">
+        <div><b id="rW"></b><span>מהאימונים בוצעו</span></div>
+        <div><b id="rP"></b><span>ימים ביעד חלבון</span></div>
+        <div><b id="rPS"></b><span>רצף חלבון הכי ארוך</span></div>
+        <div><b id="rWS"></b><span>אימונים ברצף</span></div>
+        <div><b id="rV"></b><span>ק״ג הרמת</span></div>
+        <div><b id="rUp"></b><span id="rUpL">השיפור הגדול</span></div>
+      </div>
+      <div class="ngoal" id="ngoal">
+        <h3 id="ngTitle">היעד שלי לחודש הבא</h3>
+        <p class="sub">בחרתי לך כמה יעדים לפי החודש שעבר. סמני אחד או יותר, או כתבי יעד משלך.</p>
+        <div class="gopts" id="ngOpts"></div>
+        <textarea id="ngOwn" placeholder="היעד שלי במילים שלי..."></textarea>
+        <p class="err" id="ngErr" hidden></p>
+        <button class="btn" type="button" id="ngSave">זה היעד שלי</button>
+        <div id="ngSaved" hidden><ul class="saved-goals" id="ngList"></ul><button class="linkbtn" type="button" id="ngEdit" style="margin-top:8px">שינוי היעד</button></div>
+      </div>
+    </div>
+    <div class="mstats">
+      <div class="stat"><b id="mW">0</b><span>אימונים</span><small id="mWs"></small></div>
+      <div class="stat"><b id="mSets">0</b><span>סטים</span><small id="mSetsS"></small></div>
+      <div class="stat"><b id="mVol">0</b><span>ק״ג הרמת</span><small>בכל האימונים החודש</small></div>
+      <div class="stat"><b id="mProt">0</b><span>ימים ביעד חלבון</span><small id="mProtS"></small></div>
+    </div>
+    <div class="cal">
+      <div class="grid" id="mCal"></div>
+      <div class="legend">
+        <span class="scale">חלבון: פחות <i style="--a:.15"></i><i style="--a:.35"></i><i style="--a:.6"></i><i style="--a:.85"></i><i style="--a:1"></i> ביעד</span>
+        <span><i style="background:var(--surface);border:1.5px solid var(--ok);border-radius:50%"></i>אימון בוצע</span>
+        <span><i style="border:2px solid var(--accent);border-radius:50%"></i>אימון שפוספס</span>
+      </div>
+    </div>
+    <div class="sec">
+      <h2>כמה התחזקת</h2>
+      <p class="sub">המשקל הראשון והאחרון שרשמת בכל תרגיל החודש</p>
+      <div class="prog-list" id="mProg"></div>
+    </div>
+    <button class="btn ghost" id="mBack" type="button" style="margin-top:24px">לעמוד הבית</button>
+  </div>
+  <p class="note">ההתקדמות נשמרת במכשיר הזה.</p>
+</div>
+
+<div class="rest" id="rest" hidden aria-live="polite">
+  <div class="in">
+    <div>
+      <div class="lbl" id="restLbl">מנוחה</div>
+      <div class="t" id="restT">0:00</div>
+      <div class="next" id="restNext"></div>
+    </div>
+    <div class="ctr">
+      <button type="button" id="plus15">+15 שנ׳</button>
+      <button type="button" id="skip">דלגי</button>
+      <button type="button" id="pushDone" hidden>סיימתי ✓</button>
+      <button type="button" id="pushStop" hidden>שקט</button>
+    </div>
+    <div class="bar"><i id="restBar"></i></div>
+  </div>
+</div>
+
+<nav class="tabs" aria-label="ניווט"><div class="in">
+  <button type="button" data-go="home"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>בית</button>
+  <button type="button" data-go="workout"><svg viewBox="0 0 24 24"><path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/></svg>אימון</button>
+  <button type="button" data-go="month"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>מעקב</button>
+</div></nav>
+<canvas id="confetti" hidden></canvas>
+<script src="app-1.js"></script>
+<script src="app-2.js"></script>
+</body>
+</html>
