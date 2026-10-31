@@ -486,6 +486,23 @@ $("#fbSend").addEventListener("click", () => {
   }
 });
 
+/* ---------- sign-up answers → Emily on WhatsApp ---------- */
+function answersText(){
+  const P = PROFILE || {}, h = store.get(healthKey, null) || {answers:{}};
+  const days = (P.days || []).slice().sort((a,b) => a-b).map(i => DAYFULL[i]).join(", ");
+  const yes = HQ.map((q, i) => ({q, a: h.answers[i] || {}})).filter(x => x.a.v === "yes");
+  const lines = [`שאלון הצטרפות מ${P.name || C.name} (${cid})`, `מטרות: ${(P.goals || []).join(", ") || "-"}`, `ימי אימון: ${days || "-"}, בשעה ${P.time || "-"}`, "",
+    "הצהרת בריאות:", yes.length ? yes.map(x => `• כן: ${x.q}${x.a.note ? `\n  פירוט: ${x.a.note}` : ""}`).join("\n") : "• ענתה \"לא\" על כל השאלות",
+    h.more ? `\nעוד משהו שחשוב לדעת: ${h.more}` : "", `\nהצהירה שהתשובות נכונות: ${h.declared ? "כן" : "לא"}`];
+  return lines.filter(l => l !== "").join("\n");
+}
+$("#obSendEmily").addEventListener("click", () => {
+  const a = document.createElement("a"); a.href = `https://wa.me/${EMILY_WHATSAPP}?text=${encodeURIComponent(answersText())}`; a.target = "_blank"; a.rel = "noopener";
+  document.body.appendChild(a); a.click(); a.remove();
+  PROFILE = Object.assign({}, PROFILE || {}, {sentToEmily: todayKey()}); store.set(PROFILE_KEY, PROFILE);
+  $("#obSendMsg").textContent = "נפתח וואטסאפ עם התשובות. רק ללחוץ שליחה."; $("#obSendMsg").hidden = false;
+});
+
 /* ---------- boot ---------- */
 function renderAll(){ load(); finishState = null; pendingPush = null; stopPush(); restEnd = 0; restDoneAt = 0; $("#rest").hidden = true; renderDays(); renderPlaylists(); renderWorkout(); tick(); }
 renderAll();
