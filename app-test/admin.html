@@ -13,9 +13,9 @@ body{margin:0}
 .ad{max-width:720px;margin-inline:auto;padding-block:18px 60px}
 .ad h1{font-size:48px;color:var(--mocha);margin-top:10px}
 .ad .sub{color:var(--muted);margin-top:6px}
-.tabs{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
-.tabs button{border:1.5px solid var(--line);background:transparent;color:var(--fg);border-radius:999px;padding:8px 16px;font:500 15px var(--body);cursor:pointer}
-.tabs button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.ftabs{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.ftabs button{border:1.5px solid var(--line);background:transparent;color:var(--fg);border-radius:999px;padding:8px 16px;font:500 15px var(--body);cursor:pointer}
+.ftabs button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .list{display:grid;gap:12px;margin-top:16px}
 .tr{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;gap:10px}
 .tr .row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
@@ -34,6 +34,11 @@ body{margin:0}
 .tr label{font-size:14px;color:var(--muted);display:flex;gap:6px;align-items:center}
 .tr input[type=text]{font:15px var(--body);padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);width:130px;direction:ltr}
 .empty{color:var(--muted);margin-top:20px}
+.prow{display:flex;gap:8px;flex-wrap:wrap}
+.prow div{background:var(--bg);border-radius:12px;padding:8px 12px;font-size:13px;color:var(--muted);min-width:92px}
+.prow b{display:block;font-size:22px;color:var(--fg);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;text-align:right}
+.tr .pchips button{font-size:13px}
+.pg{background:var(--bg)}
 .out{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font:14px var(--body)}
 </style>
 </head>
@@ -42,11 +47,12 @@ body{margin:0}
   <div class="top"><div class="brand">אמילי <span>·</span> ניהול</div><button class="out" id="out" type="button" hidden>יציאה</button></div>
   <div id="main" hidden>
     <h1>המתאמנות שלי</h1>
-    <p class="sub">כאן רואים מי נרשמה, קוראים את הצהרת הבריאות, ופותחים לה את התוכנית.</p>
-    <div class="tabs" role="group" aria-label="סינון">
+    <p class="sub">כאן רואים מי נרשמה, קוראים את הצהרת הבריאות, פותחים לה את התוכנית ועוקבים אחרי ההתקדמות שלה.</p>
+    <div class="ftabs" role="group" aria-label="סינון">
       <button type="button" data-f="wait" aria-pressed="true">מחכות לאישור</button>
       <button type="button" data-f="open" aria-pressed="false">פתוחות</button>
       <button type="button" data-f="all" aria-pressed="false">כולן</button>
+      <button type="button" data-f="idle" aria-pressed="false">לא התאמנו השבוע</button>
     </div>
     <div class="list" id="list"></div>
     <p class="empty" id="empty" hidden>אין כאן אף אחת כרגע.</p>
@@ -61,6 +67,7 @@ body{margin:0}
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
 <script src="cloud-config.js"></script>
+<script src="progress.js"></script>
 <script>
 const HQ = [
   "האם רופא אמר לך פעם שיש לך בעיה בלב או לחץ דם גבוה?",
@@ -77,24 +84,39 @@ const DAYFULL = ["ראשון","שני","שלישי","רביעי","חמישי","�
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const CFG = window.CLOUD_CONFIG || {};
-let sb, ROWS = [], DATA = {}, F = "wait";
+let sb, ROWS = [], DATA = {}, F = "wait", _P = {};
+const PROG = p => _P[p.id] ||= Progress.collect(DATA[p.id] || {}, p.client_id || "");
+const SUM = p => Progress.summary(PROG(p));
+const NAME = (P, id) => (P.meta.ex && P.meta.ex[id]) || id;
 
 function render(){
-  const list = ROWS.filter(p => F === "all" || (F === "open" ? p.approved : !p.approved));
+  const idle = p => { const s = SUM(p); return p.approved && (s.daysSince == null || s.daysSince >= 7); };
+  const list = ROWS.filter(p => F === "all" || (F === "idle" ? idle(p) : F === "open" ? p.approved : !p.approved));
   $("#empty").hidden = list.length > 0;
   $("#list").innerHTML = list.map(p => {
     const d = DATA[p.id] || {}, cid = p.client_id || "";
     const prof = d[`emily:${cid}:profile`] || {}, h = d[`emily:${cid}:health`];
     const yes = h ? HQ.map((q, i) => ({q, a: (h.answers || {})[i] || {}})) .filter(x => x.a.v === "yes") : [];
     const days = (prof.days || []).slice().sort((a,b) => a-b).map(i => DAYFULL[i]).join(", ");
+    const P = PROG(p), s = SUM(p);
+    const ago = s.daysSince == null ? "עוד לא" : s.daysSince === 0 ? "היום" : s.daysSince === 1 ? "אתמול" : `לפני ${s.daysSince} ימים`;
+    const prog = !p.approved ? "" : `<div class="prow">
+        <div><b>${s.thisWeek}/${s.perWeek}</b>אימונים השבוע</div>
+        <div><b>${s.total}</b>אימונים בסך הכול</div>
+        <div><b style="font-size:17px;line-height:1.6">${ago}</b>אימון אחרון</div>
+        <div><b>${s.wDelta == null ? (s.weightNow ?? "–") : (s.wDelta > 0 ? "+" : "") + s.wDelta}</b>${s.wDelta == null ? "משקל (ק״ג)" : "ק״ג מההתחלה"}</div>
+        <div><b>${s.best ? "+" + s.best.d : "–"}</b>${s.best ? esc(NAME(P, s.best.id)) : "שיפור בכוח"}</div>
+      </div>
+      <details data-graphs><summary>גרפים</summary><div class="gbox"></div><div class="pg"><h3>משקל גוף</h3><div class="chart" data-c="bw"></div></div></details>`;
     const status = p.approved ? '<span class="pill open">התוכנית פתוחה</span>' : '<span class="pill wait">מחכה לאישור</span>';
     const health = !h ? '<p class="sub">עוד לא מילאה הצהרת בריאות.</p>'
       : `<ul>${yes.length ? yes.map(x => `<li><span class="yes">כן:</span> ${esc(x.q)}${x.a.note ? `<br>פירוט: ${esc(x.a.note)}` : ""}</li>`).join("") : "<li>ענתה \"לא\" על כל השאלות</li>"}
         ${h.more ? `<li>עוד משהו: ${esc(h.more)}</li>` : ""}<li>הצהירה שהתשובות נכונות: ${h.declared ? "כן" : "לא"} · ${esc(h.at || "")}</li></ul>`;
     return `<div class="tr" data-id="${p.id}">
       <div class="row"><div><b>${esc(prof.name || p.email)}</b><br><small>${esc(p.email)}</small></div>
-        <div>${status} ${yes.length ? '<span class="pill flag">יש תשובות "כן" בהצהרה</span>' : ""}</div></div>
+        <div>${status} ${p.approved && (s.daysSince == null || s.daysSince >= 7) ? '<span class="pill flag">לא התאמנה שבוע</span>' : ""} ${yes.length ? '<span class="pill flag">יש תשובות "כן" בהצהרה</span>' : ""}</div></div>
       <div class="sub" style="font-size:14px">מטרות: ${esc((prof.goals || []).join(", ") || "-")} · ימים: ${esc(days || "-")} ${prof.time ? "· " + esc(prof.time) : ""}</div>
+      ${prog}
       <details ${!p.approved ? "open" : ""}><summary>הצהרת בריאות</summary>${health}</details>
       <div class="acts">
         ${p.approved ? '<button class="btn ghost" data-act="close" type="button">לסגור גישה</button>' : '<button class="btn" data-act="open" type="button">לפתוח גישה לתוכנית</button>'}
@@ -107,8 +129,12 @@ async function load(){
   const { data: profs, error } = await sb.from("profiles").select("*").order("created_at", {ascending:false});
   if (error) return;
   ROWS = profs;
-  const { data: rows } = await sb.from("app_data").select("user_id, k, v").or("k.like.%:profile,k.like.%:health");
-  DATA = {}; (rows || []).forEach(r => (DATA[r.user_id] ||= {})[r.k] = r.v);
+  DATA = {}; _P = {};
+  for (let from = 0; ; from += 1000) {
+    const { data: rows } = await sb.from("app_data").select("user_id, k, v").range(from, from + 999);
+    (rows || []).forEach(r => (DATA[r.user_id] ||= {})[r.k] = r.v);
+    if (!rows || rows.length < 1000) break;
+  }
   render();
 }
 
@@ -120,6 +146,13 @@ $("#list").addEventListener("click", async e => {
   if (error) { alert("לא הצלחנו לשמור. נסי שוב."); b.disabled = false; return; }
   ROWS.find(p => p.id === id).approved = approved; render();
 });
+$("#list").addEventListener("toggle", e => {
+  const d = e.target; if (!d.matches || !d.matches("details[data-graphs]") || !d.open || d.dataset.done) return;
+  d.dataset.done = 1;
+  const p = ROWS.find(x => x.id === d.closest(".tr").dataset.id), P = PROG(p);
+  Progress.panel(d.querySelector(".gbox"), P);
+  Progress.line(d.querySelector('[data-c="bw"]'), P.weight.map(x => ({d: x.d, v: x.kg})), "ק״ג", "עוד אין שתי שקילות.");
+}, true);
 $("#list").addEventListener("change", async e => {
   if (e.target.dataset.act !== "cid") return;
   const id = e.target.closest(".tr").dataset.id, v = e.target.value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -142,8 +175,8 @@ $("#clipsBtn").addEventListener("click", async () => {
   }
   msg.textContent = bad.length ? `הועברו ${ok}. נכשלו: ${bad.join(", ")}` : `כל ${ok} הקבצים הועברו ✓`; b.disabled = false;
 });
-document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
-  F = b.dataset.f; document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-pressed", x === b)); render();
+document.querySelectorAll(".ftabs button").forEach(b => b.onclick = () => {
+  F = b.dataset.f; document.querySelectorAll(".ftabs button").forEach(x => x.setAttribute("aria-pressed", x === b)); render();
 });
 
 if (!CFG.url || !CFG.anonKey) $("#cfgMissing").hidden = false;

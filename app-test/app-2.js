@@ -6,7 +6,7 @@ function go(v, keepMonth){
   const tab = document.querySelector(`.tabs [data-go="${v === "sum" ? "workout" : v}"]`); if (tab) tab.setAttribute("aria-current","page");
   $(".tabs").hidden = v === "onboard"; $(".top").hidden = v === "onboard";
   if (v === "home") renderHome();
-  if (v === "month") { if (!keepMonth) mOff = mOff > 0 ? 0 : mOff; renderMonth(); }
+  if (v === "month") { if (!keepMonth) mOff = mOff > 0 ? 0 : mOff; renderMonth(); renderProgress(); }
   window.scrollTo(0,0);
 }
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
@@ -527,3 +527,21 @@ else if (PROFILE && PROFILE.done) go("home");
 else if (PROFILE && PROFILE.submitted) afterDeclaration();
 else startOnboarding(1);
 window.addEventListener("hashchange", () => location.reload());
+
+/* ---------- progress graphs (progress.js); also saves a small plan summary so Emily's dashboard can label them ---------- */
+function progressMap(){
+  const m = {}, pre = `emily:${cid}:`;
+  try { for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if (k && k.startsWith(pre)) m[k] = store.get(k, null); } } catch(e){}
+  return m;
+}
+function renderProgress(){
+  if (!window.Progress) return;
+  const names = {}; Object.keys(LIB).forEach(id => names[id] = LIB[id].name);
+  Progress.panel($("#pPanel"), Progress.collect(progressMap(), cid), names);
+}
+(function saveMeta(){
+  if (!window.Progress) return;
+  const ex = {}; Object.values(C.workouts).forEach(w => w.list.forEach(e => ex[e.id] = LIB[e.id] ? LIB[e.id].name : e.id));
+  const meta = {protein: C.protein, perWeek: Object.keys(C.schedule).length, ex};
+  if (JSON.stringify(store.get(`emily:${cid}:meta`, null)) !== JSON.stringify(meta)) store.set(`emily:${cid}:meta`, meta);
+})();

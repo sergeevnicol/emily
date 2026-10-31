@@ -2,7 +2,7 @@
    plan opens only when Emily approves in the admin screen. Loads app-1.js and app-2.js after login. */
 (function(){
   const CFG = window.CLOUD_CONFIG || {};
-  const APP_SCRIPTS = ["app-1.js", "app-2.js"];
+  const APP_SCRIPTS = ["progress.js", "app-1.js", "app-2.js"];
   const SKIP = /:photos:|:planOpen$/;   // photos stay on the phone; plan access comes only from the server
   function loadScripts(list){
     return list.reduce((p, src) => p.then(() => new Promise((ok, bad) => {
