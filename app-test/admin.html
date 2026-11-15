@@ -62,7 +62,7 @@ body{margin:0}
       <div class="acts"><button class="btn ghost" id="clipsBtn" type="button">העברת הסרטונים לאחסון המאובטח</button><span class="sub" id="clipsMsg" style="font-size:14px"></span></div>
     </div>
   </div>
-  <p id="noAdmin" class="sub" style="margin-top:30px" hidden>המשתמש הזה לא מוגדר כמנהלת. בקשי מניקול להגדיר אותך.</p>
+  <p id="noAdmin" class="sub" style="margin-top:30px" hidden>המשתמש הזה לא מוגדר כמנהלת. בקשי מניקול ללחוץ אצלה על „להפוך למנהלת” ליד השם שלך, ואז רענני את הדף.</p>
   <p id="cfgMissing" class="sub" style="margin-top:30px" hidden>השרת עוד לא מחובר.</p>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
@@ -121,6 +121,7 @@ function render(){
       <div class="acts">
         ${p.approved ? '<button class="btn ghost" data-act="close" type="button">לסגור גישה</button>' : '<button class="btn" data-act="open" type="button">לפתוח גישה לתוכנית</button>'}
         <label>תוכנית: <input type="text" value="${esc(cid)}" data-act="cid" aria-label="שם התוכנית באפליקציה"></label>
+        ${p.role === "admin" ? '<span class="pill open">מנהלת</span>' : '<button class="btn ghost" data-act="admin" type="button">להפוך למנהלת</button>'}
       </div></div>`;
   }).join("");
 }
@@ -142,6 +143,11 @@ $("#list").addEventListener("click", async e => {
   const b = e.target.closest("button[data-act]"); if (!b) return;
   const id = b.closest(".tr").dataset.id, approved = b.dataset.act === "open";
   b.disabled = true;
+  if (b.dataset.act === "admin") {
+    const { error } = await sb.from("profiles").update({ role: "admin", approved: true }).eq("id", id);
+    if (error) { alert("לא הצלחנו לשמור. נסי שוב."); b.disabled = false; return; }
+    Object.assign(ROWS.find(p => p.id === id), { role: "admin", approved: true }); render(); return;
+  }
   const { error } = await sb.from("profiles").update({ approved }).eq("id", id);
   if (error) { alert("לא הצלחנו לשמור. נסי שוב."); b.disabled = false; return; }
   ROWS.find(p => p.id === id).approved = approved; render();
